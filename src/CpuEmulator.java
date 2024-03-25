@@ -9,6 +9,7 @@ public class CpuEmulator {
     private static int FFlag;
     private static int[] M; //memory
     public static void main(String[] args) throws IOException{
+        long start = System.currentTimeMillis();
         map = new HashMap<>();
         AC=0;
         FFlag =0;
@@ -17,7 +18,11 @@ public class CpuEmulator {
         String filename = "program.txt";//args[0];
         readyMap(filename,map);
         run();
+        long stop = System.currentTimeMillis();
+        System.out.println("time " + (stop-start));
+
     }
+
     public static void run(){
         while (!map.get(PC).equals("start")) {
             PC++;
@@ -36,19 +41,37 @@ public class CpuEmulator {
             if (command[1] != null)
                 num = Integer.parseInt(command[1]);
 
+            if (num>255 || num<0){
+                System.out.println("A value greater than byte entered");
+                System.exit(0);
+            }
+
+
+
+            int result = -1;
+            boolean PC_check=false;
             switch (command[0]){
                 case "load" -> load(num);
                 case "loadm" -> loadM(num);
                 case "store" -> store(num);
-                case "cmpm" -> cmpM(num);
-                case "cjmp" -> cJMP(num);
-                case "jmp" -> jmp(num);
-                case "add" -> add(num);
-                case "addm" -> addM(num);
-                case "subm" -> subM(num);
-                case "sub" -> sub(num);
-                case "mul" -> mul(num);
-                case "mulm" -> mulM(num);
+                case "cmpm" ->  cmpM(num);
+                case "cjmp" -> PC_check = cJMP(num);
+                case "jmp" -> PC_check = jmp(num);
+                case "add" -> result = add(num);
+                case "addm" -> result = addM(num);
+                case "subm" -> result = subM(num);
+                case "sub" -> result = sub(num);
+                case "mul" -> result = mul(num);
+                case "mulm" -> result = mulM(num);
+            }
+
+            if (result<0 || result>255){
+                System.out.println("After an operation a value greater than byte occurred exiting");
+                System.exit(0);
+            }
+            if (PC_check){
+                System.out.println("Wrong jmp");
+                System.exit(0);
             }
 
             PC++;
@@ -111,36 +134,48 @@ public class CpuEmulator {
             FFlag = 0;
     }
 
-    private static void cJMP(int x){
+    private static boolean cJMP(int x){
+        if (x> map.size())
+            return true;
         if (FFlag == 1)
             PC = x-1;
+        return false;
     }
 
-    private static void jmp(int x){
+    private static boolean jmp(int x){
+        if (x> map.size())
+            return true;
         PC = x-1;
+        return false;
     }
 
-    private static void add(int x){
+    private static int add(int x){
         AC =  AC + x;
+        return AC;
     }
 
-    private static void addM(int x){
+    private static int addM(int x){
         AC = AC + M[x];
+        return AC;
     }
 
-    private static void subM(int x){
+    private static int subM(int x){
         AC = AC - M[x];
+        return AC;
     }
 
-    private static void sub(int x){
+    private static int sub(int x){
         AC = AC - x;
+        return AC;
     }
 
-    private static void mul(int x){
+    private static int mul(int x){
         AC = AC*x;
+        return AC;
     }
-    private static void mulM(int x){
+    private static int mulM(int x){
         AC = AC * M[x];
+        return AC;
     }
 
     private static void disp(){
